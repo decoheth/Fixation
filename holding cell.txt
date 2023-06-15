@@ -1,0 +1,530 @@
+    for i in range(len(fetched)):
+        # k is grouping by category id
+        for k in range(len(fetched)):
+            if i+1 == 1:
+                b = {'name':fetched[i][1], 'category':fetched[i][2], 'category_id':fetched[i][3],'colour':fetched[i][4],'size':fetched[i][5]}
+                print("k=",k)
+                print("i=",i)
+                print(b)
+
+
+
+
+                    for topic in fetched:
+        # For each topic where category_id = 1
+        if topic[3] == 1:
+            b = {'name':topic[1], 'category':topic[2], 'category_id':topic[3],'colour':topic[4],'size':topic[5]}
+            a.append(b)
+
+
+
+# Imports
+import sys
+
+import circlify
+
+from mysql.connector import connect, Error
+
+import matplotlib.pyplot as plt
+from matplotlib import colors
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+
+import pandas as pd
+
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QPalette, QColor, QIcon
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QToolBar, QAction, QCheckBox, QStatusBar, QLabel
+
+
+
+# Variables
+# GUI parameters 
+title = "Fixation"
+w = 1000
+h = 800
+
+data2 = [{'id': 'World', 'datum': 6964195249, 'children' : [
+              {'id' : "North America", 'datum': 450448697,
+                   'children' : [
+                     {'id' : "United States", 'datum' : 308865000},
+                     {'id' : "Mexico", 'datum' : 107550697},
+                     {'id' : "Canada", 'datum' : 34033000} 
+                   ]},
+              {'id' : "South America", 'datum' : 278095425, 
+                   'children' : [
+                     {'id' : "Brazil", 'datum' : 192612000},
+                     {'id' : "Colombia", 'datum' : 45349000},
+                     {'id' : "Argentina", 'datum' : 40134425}
+                   ]},
+              {'id' : "Europe", 'datum' : 209246682,  
+                   'children' : [
+                     {'id' : "Germany", 'datum' : 81757600},
+                     {'id' : "France", 'datum' : 65447374},
+                     {'id' : "United Kingdom", 'datum' : 62041708}
+                   ]},
+              {'id' : "Africa", 'datum' : 311929000,  
+                   'children' : [
+                     {'id' : "Nigeria", 'datum' : 154729000},
+                     {'id' : "Ethiopia", 'datum' : 79221000},
+                     {'id' : "Egypt", 'datum' : 77979000}
+                   ]},
+              {'id' : "Asia", 'datum' : 2745929500,  
+                   'children' : [
+                     {'id' : "China", 'datum' : 1336335000},
+                     {'id' : "India", 'datum' : 1178225000},
+                     {'id' : "Indonesia", 'datum' : 231369500}
+                   ]}
+]}]
+
+
+data3 = L = ['a', ['bb', 'cc'], 'd']
+
+
+# Define Functions
+
+# Function to create new entry to topic table
+def add_topic(name,category,size=1):
+
+    query = "INSERT INTO topic (name, category,size) VALUES (%s,%s,%s)"
+    values = (name, category, size)
+
+    # Check if topic already exists
+        # if so then alter table and increase the size
+        
+    # Connect to db
+    mysql_connect(query,values)
+
+# Function to create new entry to category table
+def add_category(name,colour,size=1):
+    size = 1
+
+    query = "INSERT INTO category (name, colour, size) VALUES (%s,%s,%s)"
+    values = (name, colour,size)
+
+    # Connect to db
+    mysql_connect(query,values)
+
+# Function to connect to mySQL database and execute query
+def mysql_connect(q, v=''):
+    # Connect to mySQL database
+    try:
+        with connect(
+            host="localhost",
+            user="admin",
+            password="admin",
+            database="fixations"
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(q,v)
+                connection.commit()
+
+    # Raise error             
+    except Error as e:
+        print(e)
+
+
+def display_tables():
+    # Connect to mySQL database
+    try:
+        with connect(
+            host="localhost",
+            user="admin",
+            password="admin",
+            database="fixations"
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SHOW TABLES")
+                for db in cursor:
+                    print(db)
+
+    # Raise error             
+    except Error as e:
+        print(e)
+
+    
+
+def fetch_topic():
+    fetched = []
+
+    try:
+        with connect(
+            host="localhost",
+            user="admin",
+            password="admin",
+            database="fixations"
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT * FROM topic")
+                result = cursor.fetchall()
+                for row in result:
+                    fetched.append(row)
+                return(fetched)
+                
+            
+    # Raise error             
+    except Error as e:
+        print(e)
+
+
+def fetch_category():
+    fetched = []
+
+    try:
+        with connect(
+            host="localhost",
+            user="admin",
+            password="admin",
+            database="fixations"
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT * FROM category")
+                result = cursor.fetchall()
+                for row in result:
+                    fetched.append(row)
+                return(fetched)
+            
+    # Raise error             
+    except Error as e:
+        print(e)
+
+def sync_tables():
+    # Check that topic's category is real, if not then create new category entry
+
+    # fetch topic, assign color and category_id from category table
+    cat_fetched = fetch_category()
+    top_fetched = fetch_topic()
+
+    for i in range(len(cat_fetched)):
+        for k in range(len(top_fetched)):
+            # If topic's category name = category name
+            if top_fetched[k][2] == cat_fetched[i][1]:
+                mysql_connect("UPDATE topic SET category_id={a} WHERE id={b}".format(a=cat_fetched[i][0], b=top_fetched[k][0]))
+                mysql_connect("UPDATE topic SET colour='{a}' WHERE id={b}".format(a=cat_fetched[i][2], b=top_fetched[k][0]))
+
+    # check number of topics of same category, then update category size in table
+
+# Compiles topic table to be plotted
+def topic_data():
+
+    #Get max category_id
+    catid_max = 1
+    try:
+        with connect(
+            host="localhost",
+            user="admin",
+            password="admin",
+            database="fixations"
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT MAX(category_id) FROM topic")
+                result = cursor.fetchall() 
+                for row in result:
+                    catid_max = (row[0])
+    # Raise error             
+    except Error as e:
+        print(e)
+
+    outer_list = []
+
+    
+    for i in range(catid_max):
+        sub_list = []
+        try:
+            with connect(
+                host="localhost",
+                user="admin",
+                password="admin",
+                database="fixations"
+            ) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT * FROM topic WHERE category_id = {}".format(i+1))
+                    result = cursor.fetchall()
+                    for row in result:
+                        sub_list.append(row)
+                         
+        # Raise error             
+        except Error as e:
+            print(e)
+        # Add category list to master list
+        outer_list.append(sub_list)
+
+
+    return(outer_list)
+
+
+
+def create_test_batch():
+    add_category('Military','green')
+    add_category('Physics','blue')
+    add_category('Art','yellow')
+
+    add_topic('US Navy','Military','34')
+    add_topic('AI Art','Art','1')
+    add_topic('US Air Force','Military','12')
+    add_topic('Quantum Physics','Physics','5')
+    add_topic('Irish Navy','Military','2')
+    
+
+def dump_all():
+    mysql_connect("DROP TABLE topic")
+    mysql_connect("DROP TABLE category")
+
+    print("All tables have been deleted.")
+
+def rebuild():
+    mysql_connect(
+        """CREATE TABLE category (
+            id INT AUTO_INCREMENT PRIMARY KEY, 
+            name VARCHAR(255), 
+            colour VARCHAR(255), 
+            size INT)"""
+            )
+    
+    mysql_connect(
+        """CREATE TABLE topic (
+            id INT AUTO_INCREMENT PRIMARY KEY, 
+            name VARCHAR(255), 
+            category VARCHAR(255), 
+            category_id INT,  
+            colour VARCHAR(255), 
+            size INT)"""
+            )
+
+
+    create_test_batch()
+    sync_tables()
+
+    print("Current Tables:")
+    display_tables()
+    print("Database rebuilt and populated")
+
+
+
+
+
+# Classes
+
+class Color(QWidget):
+
+    def __init__(self, color):
+        super(Color, self).__init__()
+        self.setAutoFillBackground(True)
+
+        palette = self.palette()
+        palette.setColor(QPalette.Window, QColor(color))
+        self.setPalette(palette)
+
+# Create GUI
+
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+        super(MainWindow, self).__init__()
+
+        self.setWindowTitle(title)
+
+        # Tabs
+
+        tabs = QTabWidget()
+        tabs.setTabPosition(QTabWidget.North)
+        tabs.setMovable(True)
+
+
+
+        # Tab 1
+        layout1_1 = QVBoxLayout()
+        layout1_2 = QHBoxLayout()
+        layout1_3 = QHBoxLayout()
+
+        layout1_1.setContentsMargins(0,0,0,0)
+        layout1_1.setSpacing(5)
+
+        # First Row
+
+        # Button connected to 'plot' method to replot figure
+        replot_btn = QPushButton(QIcon("refresh.png"), "Refresh Plot", self)
+        replot_btn.clicked.connect(self.plot)
+
+        
+        layout1_2.addWidget(Color('red'))
+        layout1_2.addWidget(Color('yellow'))
+        layout1_2.addWidget(replot_btn)
+
+        layout1_1.addLayout( layout1_2 )
+
+        # Second Row
+        # Create Plot widget
+        self.fig = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.fig)
+        
+
+        plot_menu = NavigationToolbar(self.canvas, self)
+        
+        layout1_1.addWidget(plot_menu)
+        layout1_1.addWidget(self.canvas)
+        
+
+        # Third Row
+        foo_btn = QPushButton("Foo", self)
+        bar_btn = QPushButton("Bar", self)
+        bar_btn.clicked.connect(topic_data)
+   
+
+        layout1_3.addWidget(foo_btn)
+        layout1_3.addWidget(bar_btn)
+
+        layout1_1.addLayout( layout1_3 )
+
+        container1 = QWidget()
+        container1.setLayout(layout1_1)
+
+        # Tab 2
+        layout2_1 = QVBoxLayout()
+        
+        layout2_1.addWidget(Color('red'))
+        layout2_1.addWidget(Color('green'))
+        layout2_1.addWidget(Color('blue'))
+
+        container2 = QWidget()
+        container2.setLayout(layout2_1)
+
+        # Assign Tabs
+        tabs.addTab(container1,'Display')
+        tabs.addTab(container2,'Add New')
+
+        self.setCentralWidget(tabs)
+
+        # Menu
+        dump_action = QAction("&Delete All", self)
+        dump_action.setStatusTip("Delete all tables and entries.")
+        dump_action.triggered.connect(dump_all)
+
+        rebuild_action = QAction("&Rebuild", self)
+        rebuild_action.setStatusTip("Rebuild and populate the database.")
+        rebuild_action.triggered.connect(rebuild)
+
+        sync_action = QAction("&Sync Database", self)
+        sync_action.setStatusTip("Sync the database tables and fill in calculated values.")
+        sync_action.triggered.connect(sync_tables)
+
+        exit_action = QAction("&Exit", self)
+        exit_action.triggered.connect(app.quit)
+       
+        menu = self.menuBar()
+
+        file_menu = menu.addMenu("&File")
+        file_menu.addAction(sync_action)
+        file_menu.addAction(dump_action)
+        file_menu.addAction(rebuild_action)
+        file_menu.addAction(exit_action)
+        
+
+
+
+
+
+    def plot(self):
+
+        # Sync Tables
+        sync_tables()  
+
+        
+
+
+        data = topic_data()
+        data_size = []
+        data_label = []
+        data_colour = []
+        data_cat = []
+
+        for cat in data:
+            for top in cat:
+                data_size.append(top[5])
+                data_label.append(top[1])
+                data_colour.append(top[4])
+                data_cat.append(top[2])
+
+
+        print(data)
+        print(data_size)
+        print(data_label)
+        print(data_cat)
+
+        # Clear old figure
+        self.fig.clear()
+
+        # Create an axis
+        ax = self.fig.add_subplot(111)
+
+        # Plot data
+
+        # compute circle positions:
+        circles = circlify.circlify(
+
+            data_size, 
+            show_enclosure=False, 
+            target_enclosure=circlify.Circle(x=0, y=0, r=1)
+        )
+
+        # Find axis boundaries
+        lim = max(
+            max(
+                abs(circle.x) + circle.r,
+                abs(circle.y) + circle.r,
+            )
+            for circle in circles
+        )
+        plt.xlim(-lim, lim)
+        plt.ylim(-lim, lim)
+
+        # list of labels
+        labels = data_label
+        colors = data_colour
+
+        # print circles
+        for circle, label, color in zip(circles, labels, colors):
+            x, y, r = circle
+            ax.add_patch(plt.Circle((x, y), r*0.9, alpha=0.9, linewidth=2, facecolor=color, edgecolor="black"))
+            plt.annotate(label, (x,y) ,va='center', ha='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round', pad=.5))
+
+
+
+        
+        # Plot Labels
+        ax.set_title("Fixations")
+        # Remove axes
+        ax.axis('off')
+
+        # Legend with a cross section of sizes from the scatter
+        #handles, labels = scatter.legend_elements(prop="sizes", alpha=0.6)
+        #ax.legend(handles, labels, loc="upper right", title="Size")
+
+        # refresh canvas
+        self.canvas.draw()
+
+
+
+app = QApplication(sys.argv)
+
+window = MainWindow()
+#window.resize(w,h)
+window.show()
+
+# GUI loop
+app.exec()
+
+
+
+
+
+
+print("Loop:",i," Mid array:",mid_array)
+print("Loop:",i," Outer array:",outer_array)
+print("")
+
+
+
+
+
+
