@@ -1,20 +1,17 @@
-# Imports
+# Import Libraries
 import sys
 import logging
 
 
-
 import circlify
 
-from mysql.connector import connect, Error
-
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
-from PyQt5.QtCore import QSize
+from mysql.connector import connect, Error
+
 from PyQt5.QtGui import QPalette, QColor, QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QToolBar, QAction, QCheckBox, QStatusBar, QLabel
 
@@ -150,11 +147,9 @@ def sync_tables():
                 mysql_connect("UPDATE topic SET category_id={a} WHERE id={b}".format(a=cat_fetched[i][0], b=top_fetched[k][0]))
                 mysql_connect("UPDATE topic SET colour='{a}' WHERE id={b}".format(a=cat_fetched[i][2], b=top_fetched[k][0]))
 
-    # check number of topics of same category, then update category size in table
 
 # Compiles topic table to be plotted
 def topic_data():
-
 
 
 
@@ -208,9 +203,11 @@ def topic_data():
                         # Add datum size to sum
                         sum += row[5]
                         sub_list["colour"] = row[4]
-                        # Convert list to array
+                        # Append list to array
                         sub_array.append(sub_list)
-                        
+                        # Empty list
+                        sub_list = {}
+                    
                         
                     # Set middle list (category)     
                     middle_list["id"] = row[2]
@@ -225,12 +222,8 @@ def topic_data():
             print(e)
 
 
-        # Add middle list to outer list
-
-        # Convert list to array
-        # Append middle array (category) to outer array
+        # Append middle list (category) to outer array
         outer_array.append(middle_list)
-
 
         # Empty arrays
         sub_array = []
@@ -365,8 +358,8 @@ class MainWindow(QMainWindow):
         # Third Row
         foo_btn = QPushButton("Foo", self)
         bar_btn = QPushButton("Bar", self)
-        #bar_btn.clicked.connect(topic_data)
-        #bar_btn.clicked.connect(app.quit)
+        bar_btn.clicked.connect(topic_data)
+        bar_btn.clicked.connect(app.quit)
    
 
         layout1_3.addWidget(foo_btn)
@@ -478,7 +471,7 @@ class MainWindow(QMainWindow):
         # Create Legend
         ax.legend(legend_icon,legend_labels) 
         # Set figure tight layout
-        self.fig.tight_layout()
+        #self.fig.tight_layout()
         # Plot Labels
         ax.set_title(title)
         # Remove axes
@@ -504,8 +497,10 @@ window = MainWindow()
 window.show()
 # Call plot function
 window.plot()
+
 # GUI loop
 app.exec()
+
 
 
 
