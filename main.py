@@ -14,7 +14,7 @@ from mysql.connector import connect, Error
 
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QPalette, QColor, QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QAction
+from PyQt5.QtWidgets import *
 
 
 
@@ -358,58 +358,224 @@ class MainWindow(QMainWindow):
         layout1_1.addWidget(self.canvas)
         
 
-        # Third Row
+        # Row 3
         foo_btn = QPushButton("Foo", self)
         bar_btn = QPushButton("Bar", self)
-        bar_btn.clicked.connect(topic_data)
-        bar_btn.clicked.connect(app.quit)
-   
 
         layout1_3.addWidget(foo_btn)
         layout1_3.addWidget(bar_btn)
-
+        # Add Row 3 to Tab 1
         layout1_1.addLayout( layout1_3 )
 
         container1 = QWidget()
         container1.setLayout(layout1_1)
 
 
+
+
+
         # Tab 2
         layout2 = QVBoxLayout()
         
-        # First Row
+        # Row 1
         layout2_1 = QHBoxLayout()
-            # First Row - Left
-        layout2_1_left = QVBoxLayout()
-                # New Category
-        layout2_1_left.addWidget(Color('red'))
-                # New Topic
-        layout2_1_left.addWidget(Color('red'))
 
- 
+        # Row 1 - Left
+        layout2_1_left = QVBoxLayout()
+
+        # Category list label
+        cat_list_label = QLabel("Categories")
+        layout2_1_left.addWidget(cat_list_label)
+        # Category list
+        cat_list = QListWidget()
+        cat_list_item = QListWidgetItem ("Test 1", cat_list)
+        cat_list_item = QListWidgetItem ("Test 2", cat_list)
+        cat_list_item = QListWidgetItem ("Test 3", cat_list)
+        cat_list.addItem(cat_list_item)
+
+        layout2_1_left.addWidget(cat_list)
+
+        # Add left side to Row 1 layout
         layout2_1.addLayout(layout2_1_left)
 
-
-
-            # First Row - Right
+        # Row 1 - Right
         layout2_1_right = QVBoxLayout()
-                # Widget
-        layout2_1_right.addWidget(Color('yellow'))
-        layout2_1_right.addWidget(Color('yellow'))
-        layout2_1_right.addWidget(Color('yellow'))
 
- 
+        # New category
+        new_cat_label = QLabel("New Category")
+        layout2_1_right.addWidget(new_cat_label)
+
+        layout2_1_right_1= QHBoxLayout()
+        # Row 1 - Right - Left
+        layout2_1_right_1_left = QVBoxLayout()
+        new_cat_label_1 = QLabel("Name:")
+        new_cat_label_2 = QLabel("Colour:")
+        new_cat_clear = QPushButton("Clear")
+
+        layout2_1_right_1_left.addWidget(new_cat_label_1)
+        layout2_1_right_1_left.addWidget(new_cat_label_2)
+        layout2_1_right_1_left.addWidget(new_cat_clear)
+        layout2_1_right_1.addLayout(layout2_1_right_1_left)
+
+        # Row 1 - Right - Right
+        layout2_1_right_1_right = QVBoxLayout()
+        new_cat_input_1 = QLineEdit()
+        new_cat_input_2 = QLineEdit()
+        new_cat_submit = QPushButton("Submit")
+
+        layout2_1_right_1_right.addWidget(new_cat_input_1)
+        layout2_1_right_1_right.addWidget(new_cat_input_2)
+        layout2_1_right_1_right.addWidget(new_cat_submit)
+        layout2_1_right_1.addLayout(layout2_1_right_1_right)
+
+        layout2_1_right.addLayout(layout2_1_right_1)
+
+        # Edit category
+        edit_cat_label = QLabel("Edit Category")
+        layout2_1_right.addWidget(edit_cat_label)
+        
+        layout2_1_right_2 = QHBoxLayout()
+        # Row 1 - Right - Left
+        layout2_1_right_left = QVBoxLayout()
+        edit_cat_label_1 = QLabel("Name:")
+        edit_cat_label_2 = QLabel("Colour:")
+        edit_cat_delete = QPushButton("Delete")
+
+        layout2_1_right_left.addWidget(edit_cat_label_1)
+        layout2_1_right_left.addWidget(edit_cat_label_2)
+        layout2_1_right_left.addWidget(edit_cat_delete)
+        layout2_1_right_2.addLayout(layout2_1_right_left)
+
+        # Row 1 - Right - Right
+        layout2_1_right_2_right = QVBoxLayout()
+        edit_cat_input_1 = QLineEdit()
+        edit_cat_input_2 = QLineEdit()
+        edit_cat_submit = QPushButton("Submit")
+
+        layout2_1_right_2_right.addWidget(edit_cat_input_1)
+        layout2_1_right_2_right.addWidget(edit_cat_input_2)
+        layout2_1_right_2_right.addWidget(edit_cat_submit)
+        layout2_1_right_2.addLayout(layout2_1_right_2_right)
+
+        layout2_1_right.addLayout(layout2_1_right_2)
+
+        # Add right side to Row 1 layout
         layout2_1.addLayout(layout2_1_right)
 
 
-
-
+        # Add Row 1 to Tab 2 layout
         layout2.addLayout(layout2_1)
 
-        # Second Row
-        layout2.addWidget(Color('green'))
-        layout2.addWidget(Color('blue'))
 
+        # Row 2
+        # New topic
+        new_topic_label = QLabel("Create New Topic")
+        layout2.addWidget(new_topic_label)
+
+        layout2_2 = QHBoxLayout()
+ 
+        # Row 2 - Left
+        layout2_2_left = QVBoxLayout()
+        new_topic_label_1 = QLabel("Name:")
+        new_topic_label_2 = QLabel("Category:")
+        new_topic_label_3 = QLabel("Size:")
+        new_topic_clear = QPushButton("Clear")
+
+        layout2_2_left.addWidget(new_topic_label_1)
+        layout2_2_left.addWidget(new_topic_label_2)
+        layout2_2_left.addWidget(new_topic_label_3)
+        layout2_2_left.addWidget(new_topic_clear)
+        layout2_2.addLayout(layout2_2_left)
+
+        # Row 2 - Right
+        layout2_2_right = QVBoxLayout()
+        new_topic_input_1 = QLineEdit()
+        new_topic_input_2 = QComboBox()
+        new_topic_input_3= QSpinBox()
+        new_topic_submit = QPushButton("Submit")
+
+        layout2_2_right.addWidget(new_topic_input_1)
+        layout2_2_right.addWidget(new_topic_input_2)
+        layout2_2_right.addWidget(new_topic_input_3)
+        layout2_2_right.addWidget(new_topic_submit)
+        layout2_2.addLayout(layout2_2_right)
+
+        # Add Row 2 to Tab 2 layout
+        layout2.addLayout(layout2_2)
+
+
+        # Row 3
+        layout2_3 = QHBoxLayout()
+
+        # Row 3 - Left
+        layout2_3_left = QVBoxLayout()
+
+        # Topic list label
+        topic_list_label = QLabel("Topics")
+        layout2_3_left.addWidget(topic_list_label)
+        # Topic list
+        topic_list = QListWidget()
+        topic_list_item = QListWidgetItem ("Test 1", topic_list)
+        topic_list_item = QListWidgetItem ("Test 2", topic_list)
+        topic_list_item = QListWidgetItem ("Test 3", topic_list)
+        topic_list.addItem(topic_list_item)
+
+        layout2_3_left.addWidget(topic_list)
+
+        # Add left side to Row 3 layout
+        layout2_3.addLayout(layout2_3_left)
+
+
+        # Row 3 - Right
+        layout2_3_right = QVBoxLayout()
+
+        # Edit topic
+        edit_topic_label = QLabel("Edit Topic")
+        layout2_3_right.addWidget(edit_topic_label)
+        
+        # Row 3 - Right - 1
+        layout2_3_right_1 = QHBoxLayout()
+        edit_topic_label_1 = QLabel("Name:")
+        edit_topic_input_1 = QLineEdit()
+        
+        layout2_3_right_1.addWidget(edit_topic_label_1)
+        layout2_3_right_1.addWidget(edit_topic_input_1)
+        # Row 3 - Right - 2
+        layout2_3_right_2 = QHBoxLayout()
+        edit_topic_label_2 = QLabel("Category:")
+        edit_topic_input_2 = QComboBox()
+        
+        layout2_3_right_2.addWidget(edit_topic_label_2)
+        layout2_3_right_2.addWidget(edit_topic_input_2)
+        # Row 3 - Right - 3
+        layout2_3_right_3 = QHBoxLayout()
+        edit_topic_label_3 = QLabel("Size:")
+        edit_topic_input_3= QSpinBox()
+
+        layout2_3_right_3.addWidget(edit_topic_label_3)
+        layout2_3_right_3.addWidget(edit_topic_input_3)
+        # Row 3 - Right - 4
+        layout2_3_right_4 = QHBoxLayout()
+        edit_topic_delete = QPushButton("Delete")
+        edit_topic_submit = QPushButton("Submit")
+
+        layout2_3_right_4.addWidget(edit_topic_delete)
+        layout2_3_right_4.addWidget(edit_topic_submit)
+
+        # Add rows to Row 3 right
+        layout2_3_right.addLayout(layout2_3_right_1)
+        layout2_3_right.addLayout(layout2_3_right_2)
+        layout2_3_right.addLayout(layout2_3_right_3)
+        layout2_3_right.addLayout(layout2_3_right_4)
+
+        # Add right side to Row 3 layout
+        layout2_3.addLayout(layout2_3_right)
+
+        # Add Row 3 to Tab 2 layout
+        layout2.addLayout(layout2_3)
+
+        
+        # Tab 2 Container
         container2 = QWidget()
         container2.setLayout(layout2)
 
