@@ -1,0 +1,4 @@
+circlify
+matplotlib
+mysql-connector-python
+PyQt5

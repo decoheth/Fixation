@@ -12,8 +12,9 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 
 from mysql.connector import connect, Error
 
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QPalette, QColor, QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QToolBar, QAction, QCheckBox, QStatusBar, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QAction
 
 
 
@@ -248,14 +249,15 @@ def create_test_batch():
     add_category('Technology','#2343b8')
     add_category('Books','#10c790')
 
-    add_topic('US Navy','Military','34')
-    add_topic('AI Art','Art','3')
-    add_topic('US Air Force','Military','12')
-    add_topic('Quantum Physics','Physics','5')
-    add_topic('Irish Navy','Military','8')
-    add_topic('Python GUI','Technology','4')
-    add_topic('Brandon Sanderson','Books','12')
-    add_topic('Python Graphs & Plots','Technology','7')
+    add_topic('US Navy','Military',34)
+    add_topic('AI Art','Art',3)
+    add_topic('US Air Force','Military',12)
+    add_topic('Quantum Physics','Physics',5)
+    add_topic('Irish Navy','Military',8)
+    add_topic('Python GUI','Technology',4)
+    add_topic('Brandon Sanderson','Books',12)
+    add_topic('Smart Homes','Technology',3)
+    add_topic('Submarines','Military',5)
     
 
 def dump_all():
@@ -335,6 +337,7 @@ class MainWindow(QMainWindow):
 
         # Button connected to 'plot' method to replot figure
         replot_btn = QPushButton(QIcon("refresh.png"), "Refresh Plot", self)
+        replot_btn.setIconSize(QSize(16,16))
         replot_btn.clicked.connect(self.plot)
 
         
@@ -342,7 +345,7 @@ class MainWindow(QMainWindow):
         layout1_2.addWidget(Color('yellow'))
         layout1_2.addWidget(replot_btn)
 
-        layout1_1.addLayout( layout1_2 )
+        layout1_1.addLayout(layout1_2)
 
         # Second Row
         # Create Plot widget
@@ -370,19 +373,49 @@ class MainWindow(QMainWindow):
         container1 = QWidget()
         container1.setLayout(layout1_1)
 
+
         # Tab 2
-        layout2_1 = QVBoxLayout()
+        layout2 = QVBoxLayout()
         
-        layout2_1.addWidget(Color('red'))
-        layout2_1.addWidget(Color('green'))
-        layout2_1.addWidget(Color('blue'))
+        # First Row
+        layout2_1 = QHBoxLayout()
+            # First Row - Left
+        layout2_1_left = QVBoxLayout()
+                # New Category
+        layout2_1_left.addWidget(Color('red'))
+                # New Topic
+        layout2_1_left.addWidget(Color('red'))
+
+ 
+        layout2_1.addLayout(layout2_1_left)
+
+
+
+            # First Row - Right
+        layout2_1_right = QVBoxLayout()
+                # Widget
+        layout2_1_right.addWidget(Color('yellow'))
+        layout2_1_right.addWidget(Color('yellow'))
+        layout2_1_right.addWidget(Color('yellow'))
+
+ 
+        layout2_1.addLayout(layout2_1_right)
+
+
+
+
+        layout2.addLayout(layout2_1)
+
+        # Second Row
+        layout2.addWidget(Color('green'))
+        layout2.addWidget(Color('blue'))
 
         container2 = QWidget()
-        container2.setLayout(layout2_1)
+        container2.setLayout(layout2)
 
         # Assign Tabs
         tabs.addTab(container1,'Display')
-        tabs.addTab(container2,'Add New')
+        tabs.addTab(container2,'Manage')
 
         self.setCentralWidget(tabs)
 
@@ -449,8 +482,8 @@ class MainWindow(QMainWindow):
 
             label = circle.ex["id"]
             c = circle.ex["colour"]     
-            ax.add_patch( plt.Circle((x, y), r, alpha=.9, linewidth=1.2, facecolor=c,edgecolor="black"))
-            plt.annotate(label, (x,y ) ,va='center', ha='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round', pad=.5))
+            ax.add_patch( plt.Circle((x, y), r, linewidth=1.2, facecolor=c,edgecolor="black"))
+            plt.annotate(label, (x,y ) ,va='center', ha='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round', pad=.5,alpha=.7),size=7)
 
         # Categories (2nd Level)
         legend_labels = []
@@ -471,9 +504,8 @@ class MainWindow(QMainWindow):
         # Create Legend
         ax.legend(legend_icon,legend_labels) 
         # Set figure tight layout
-        #self.fig.tight_layout()
+        self.fig.tight_layout()
         # Plot Labels
-        ax.set_title(title)
         # Remove axes
         ax.axis('equal')
         ax.tick_params(
