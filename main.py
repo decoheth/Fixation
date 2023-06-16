@@ -336,7 +336,7 @@ class MainWindow(QMainWindow):
         # First Row
 
         # Button connected to 'plot' method to replot figure
-        replot_btn = QPushButton(QIcon("refresh.png"), "Refresh Plot", self)
+        replot_btn = QPushButton(QIcon("static/icons/refresh.png"), "Refresh Plot", self)
         replot_btn.setIconSize(QSize(16,16))
         replot_btn.clicked.connect(self.plot)
 
