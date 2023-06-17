@@ -1,6 +1,7 @@
 # Import Libraries
 import sys
 import logging
+import random
 
 
 import circlify
@@ -33,21 +34,31 @@ logging.getLogger("circlify").setLevel(logging.ERROR)
 # Function to create new entry to topic table
 def add_topic(name,category,size=1):
 
+
+
+     
+
     query = "INSERT INTO topic (name, category,size) VALUES (%s,%s,%s)"
     values = (name, category, size)
 
     # Check if topic already exists
         # if so then alter table and increase the size
-        
+    
+    print("Topic created:",name)
     # Connect to db
     mysql_connect(query,values)
 
 # Function to create new entry to category table
-def add_category(name,colour):
+def add_category(name,colour=""):
+
+    # Error Checking
+    if colour=="":
+        colour = rand_colour()
 
     query = "INSERT INTO category (name, colour) VALUES (%s,%s)"
     values = (name, colour)
 
+    print("Category created:",name)
     # Connect to db
     mysql_connect(query,values)
 
@@ -68,27 +79,6 @@ def mysql_connect(q, v=''):
     # Raise error             
     except Error as e:
         print(e)
-
-
-def display_tables():
-    # Connect to mySQL database
-    try:
-        with connect(
-            host="localhost",
-            user="admin",
-            password="admin",
-            database="fixations"
-        ) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute("SHOW TABLES")
-                for db in cursor:
-                    print(db)
-
-    # Raise error             
-    except Error as e:
-        print(e)
-
-    
 
 def fetch_topic():
     fetched = []
@@ -128,6 +118,7 @@ def fetch_category():
                 result = cursor.fetchall()
                 for row in result:
                     fetched.append(row)
+                #print(fetched)
                 return(fetched)
             
     # Raise error             
@@ -148,7 +139,11 @@ def sync_tables():
                 mysql_connect("UPDATE topic SET category_id={a} WHERE id={b}".format(a=cat_fetched[i][0], b=top_fetched[k][0]))
                 mysql_connect("UPDATE topic SET colour='{a}' WHERE id={b}".format(a=cat_fetched[i][2], b=top_fetched[k][0]))
 
-
+def rand_colour():
+    r = lambda: random.randint(0,255)
+    colour = '#{:02x}{:02x}{:02x}'.format(r(), r(), r())
+    return(colour)
+    
 # Compiles topic table to be plotted
 def topic_data():
 
@@ -267,6 +262,7 @@ def dump_all():
     print("All tables have been deleted.")
 
 def rebuild():
+    dump_all()
     mysql_connect(
         """CREATE TABLE category (
             id INT AUTO_INCREMENT PRIMARY KEY, 
@@ -288,8 +284,6 @@ def rebuild():
     create_test_batch()
     sync_tables()
 
-    print("Current Tables:")
-    display_tables()
     print("Database rebuilt and populated")
 
 
@@ -319,9 +313,9 @@ class MainWindow(QMainWindow):
         self.resize(w,h)
 
         # Tabs
-        tabs = QTabWidget()
-        tabs.setTabPosition(QTabWidget.North)
-        tabs.setMovable(True)
+        self.tabs = QTabWidget()
+        self.tabs.setTabPosition(QTabWidget.North)
+        self.tabs.setMovable(True)
 
 
 
@@ -387,13 +381,9 @@ class MainWindow(QMainWindow):
         cat_list_label = QLabel("Categories")
         layout2_1_left.addWidget(cat_list_label)
         # Category list
-        cat_list = QListWidget()
-        cat_list_item = QListWidgetItem ("Test 1", cat_list)
-        cat_list_item = QListWidgetItem ("Test 2", cat_list)
-        cat_list_item = QListWidgetItem ("Test 3", cat_list)
-        cat_list.addItem(cat_list_item)
-
-        layout2_1_left.addWidget(cat_list)
+        self.cat_list = QListWidget()
+        self.load_cat_list()
+        layout2_1_left.addWidget(self.cat_list)
 
         # Add left side to Row 1 layout
         layout2_1.addLayout(layout2_1_left)
@@ -410,22 +400,26 @@ class MainWindow(QMainWindow):
         layout2_1_right_1_left = QVBoxLayout()
         new_cat_label_1 = QLabel("Name:")
         new_cat_label_2 = QLabel("Colour:")
-        new_cat_clear = QPushButton("Clear")
+        self.new_cat_clear = QPushButton("Clear")
+
+        self.new_cat_clear.clicked.connect(self.clear_new_category)
 
         layout2_1_right_1_left.addWidget(new_cat_label_1)
         layout2_1_right_1_left.addWidget(new_cat_label_2)
-        layout2_1_right_1_left.addWidget(new_cat_clear)
+        layout2_1_right_1_left.addWidget(self.new_cat_clear)
         layout2_1_right_1.addLayout(layout2_1_right_1_left)
 
         # Row 1 - Right - Right
         layout2_1_right_1_right = QVBoxLayout()
-        new_cat_input_1 = QLineEdit()
-        new_cat_input_2 = QLineEdit()
-        new_cat_submit = QPushButton("Submit")
+        self.new_cat_input_1 = QLineEdit()
+        self.new_cat_input_2 = QLineEdit()
+        self.new_cat_submit = QPushButton("Submit")
 
-        layout2_1_right_1_right.addWidget(new_cat_input_1)
-        layout2_1_right_1_right.addWidget(new_cat_input_2)
-        layout2_1_right_1_right.addWidget(new_cat_submit)
+        self.new_cat_submit.clicked.connect(self.submit_new_category)
+
+        layout2_1_right_1_right.addWidget(self.new_cat_input_1)
+        layout2_1_right_1_right.addWidget(self.new_cat_input_2)
+        layout2_1_right_1_right.addWidget(self.new_cat_submit)
         layout2_1_right_1.addLayout(layout2_1_right_1_right)
 
         layout2_1_right.addLayout(layout2_1_right_1)
@@ -439,22 +433,22 @@ class MainWindow(QMainWindow):
         layout2_1_right_left = QVBoxLayout()
         edit_cat_label_1 = QLabel("Name:")
         edit_cat_label_2 = QLabel("Colour:")
-        edit_cat_delete = QPushButton("Delete")
+        self.edit_cat_delete = QPushButton("Delete")
 
         layout2_1_right_left.addWidget(edit_cat_label_1)
         layout2_1_right_left.addWidget(edit_cat_label_2)
-        layout2_1_right_left.addWidget(edit_cat_delete)
+        layout2_1_right_left.addWidget(self.edit_cat_delete)
         layout2_1_right_2.addLayout(layout2_1_right_left)
 
         # Row 1 - Right - Right
         layout2_1_right_2_right = QVBoxLayout()
-        edit_cat_input_1 = QLineEdit()
-        edit_cat_input_2 = QLineEdit()
-        edit_cat_submit = QPushButton("Submit")
+        self.edit_cat_input_1 = QLineEdit()
+        self.edit_cat_input_2 = QLineEdit()
+        self.edit_cat_submit = QPushButton("Submit")
 
-        layout2_1_right_2_right.addWidget(edit_cat_input_1)
-        layout2_1_right_2_right.addWidget(edit_cat_input_2)
-        layout2_1_right_2_right.addWidget(edit_cat_submit)
+        layout2_1_right_2_right.addWidget(self.edit_cat_input_1)
+        layout2_1_right_2_right.addWidget(self.edit_cat_input_2)
+        layout2_1_right_2_right.addWidget(self.edit_cat_submit)
         layout2_1_right_2.addLayout(layout2_1_right_2_right)
 
         layout2_1_right.addLayout(layout2_1_right_2)
@@ -476,32 +470,45 @@ class MainWindow(QMainWindow):
  
         # Row 2 - Left
         layout2_2_left = QVBoxLayout()
-        new_topic_label_1 = QLabel("Name:")
-        new_topic_label_2 = QLabel("Category:")
-        new_topic_label_3 = QLabel("Size:")
-        new_topic_clear = QPushButton("Clear")
+        self.new_topic_label_1 = QLabel("Name:")
+        self.new_topic_label_2 = QLabel("Category:")
+        self.new_topic_label_3 = QLabel("Size:")
+        self.new_topic_clear = QPushButton("Clear")
 
-        layout2_2_left.addWidget(new_topic_label_1)
-        layout2_2_left.addWidget(new_topic_label_2)
-        layout2_2_left.addWidget(new_topic_label_3)
-        layout2_2_left.addWidget(new_topic_clear)
+        self.new_topic_clear.clicked.connect(self.clear_new_topic)
+
+        layout2_2_left.addWidget(self.new_topic_label_1)
+        layout2_2_left.addWidget(self.new_topic_label_2)
+        layout2_2_left.addWidget(self.new_topic_label_3)
+        layout2_2_left.addWidget(self.new_topic_clear)
         layout2_2.addLayout(layout2_2_left)
 
+        
         # Row 2 - Right
         layout2_2_right = QVBoxLayout()
-        new_topic_input_1 = QLineEdit()
-        new_topic_input_2 = QComboBox()
-        new_topic_input_3= QSpinBox()
-        new_topic_submit = QPushButton("Submit")
+        self.new_topic_input_1 = QLineEdit()
+        self.new_topic_input_2 = QComboBox()
+        self.new_topic_input_3= QSpinBox()
+        self.new_topic_submit = QPushButton("Submit")
 
-        layout2_2_right.addWidget(new_topic_input_1)
-        layout2_2_right.addWidget(new_topic_input_2)
-        layout2_2_right.addWidget(new_topic_input_3)
-        layout2_2_right.addWidget(new_topic_submit)
+        # Category dropdown
+        self.load_cat_dropdown_1()
+
+        self.new_topic_input_3.setValue(1)
+        self.new_topic_submit.clicked.connect(self.submit_new_topic)
+
+        layout2_2_right.addWidget(self.new_topic_input_1)
+        layout2_2_right.addWidget(self.new_topic_input_2)
+        layout2_2_right.addWidget(self.new_topic_input_3)
+        layout2_2_right.addWidget(self.new_topic_submit)
         layout2_2.addLayout(layout2_2_right)
 
         # Add Row 2 to Tab 2 layout
         layout2.addLayout(layout2_2)
+
+
+
+
 
 
         # Row 3
@@ -514,13 +521,9 @@ class MainWindow(QMainWindow):
         topic_list_label = QLabel("Topics")
         layout2_3_left.addWidget(topic_list_label)
         # Topic list
-        topic_list = QListWidget()
-        topic_list_item = QListWidgetItem ("Test 1", topic_list)
-        topic_list_item = QListWidgetItem ("Test 2", topic_list)
-        topic_list_item = QListWidgetItem ("Test 3", topic_list)
-        topic_list.addItem(topic_list_item)
-
-        layout2_3_left.addWidget(topic_list)
+        self.topic_list = QListWidget()
+        self.load_topic_list()
+        layout2_3_left.addWidget(self.topic_list)
 
         # Add left side to Row 3 layout
         layout2_3.addLayout(layout2_3_left)
@@ -543,10 +546,13 @@ class MainWindow(QMainWindow):
         # Row 3 - Right - 2
         layout2_3_right_2 = QHBoxLayout()
         edit_topic_label_2 = QLabel("Category:")
-        edit_topic_input_2 = QComboBox()
-        
+        self.edit_topic_input_2 = QComboBox()
+
+        # Category dropdown
+        self.load_cat_dropdown_2()
+
         layout2_3_right_2.addWidget(edit_topic_label_2)
-        layout2_3_right_2.addWidget(edit_topic_input_2)
+        layout2_3_right_2.addWidget(self.edit_topic_input_2)
         # Row 3 - Right - 3
         layout2_3_right_3 = QHBoxLayout()
         edit_topic_label_3 = QLabel("Size:")
@@ -580,19 +586,21 @@ class MainWindow(QMainWindow):
         container2.setLayout(layout2)
 
         # Assign Tabs
-        tabs.addTab(container1,'Display')
-        tabs.addTab(container2,'Manage')
+        self.tabs.addTab(container1,'Display')
+        self.tabs.addTab(container2,'Manage')
 
-        self.setCentralWidget(tabs)
+        self.setCentralWidget(self.tabs)
+
 
         # Menu
-        dump_action = QAction("&Delete All", self)
-        dump_action.setStatusTip("Delete all tables and entries.")
-        dump_action.triggered.connect(dump_all)
-
         rebuild_action = QAction("&Rebuild", self)
         rebuild_action.setStatusTip("Rebuild and populate the database.")
         rebuild_action.triggered.connect(rebuild)
+        # Refresh topic and category lists on Tab 2
+        rebuild_action.triggered.connect(self.load_topic_list)
+        rebuild_action.triggered.connect(self.load_cat_list)
+        rebuild_action.triggered.connect(self.load_cat_dropdown_1)
+        rebuild_action.triggered.connect(self.load_cat_dropdown_2)
 
         exit_action = QAction("&Exit", self)
         exit_action.triggered.connect(app.quit)
@@ -600,7 +608,6 @@ class MainWindow(QMainWindow):
         menu = self.menuBar()
 
         file_menu = menu.addMenu("&File")
-        file_menu.addAction(dump_action)
         file_menu.addAction(rebuild_action)
         file_menu.addAction(exit_action)
         
@@ -648,7 +655,7 @@ class MainWindow(QMainWindow):
 
             label = circle.ex["id"]
             c = circle.ex["colour"]     
-            ax.add_patch( plt.Circle((x, y), r, linewidth=1.2, facecolor=c,edgecolor="black"))
+            ax.add_patch( plt.Circle((x, y), r*.988, linewidth=1.2, facecolor=c,edgecolor="black"))
             plt.annotate(label, (x,y ) ,va='center', ha='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round', pad=.5,alpha=.7),size=7)
 
         # Categories (2nd Level)
@@ -682,24 +689,93 @@ class MainWindow(QMainWindow):
             labelbottom=False,  # labels along the bottom edge are off
             labelleft=False)    # labels along the left edge are off
 
-
         # Refresh canvas
         self.canvas.draw()
 
+    def clear_new_topic(self):
+        self.new_topic_input_1.setText("")
+        self.new_topic_input_3.setValue(1)
+
+    def clear_new_category(self):
+        self.new_cat_input_1.setText("")
+        self.new_cat_input_2.setText("")
+
+    def submit_new_topic(self):
+        name=self.new_topic_input_1.text()
+        category=self.new_topic_input_2.currentText()
+        size=self.new_topic_input_3.value()
+        # Error Checking
+        if name == "":
+            QMessageBox.critical(self,"Error", "Topic name must not be empty.")
+            return()
+        elif size <= 0:
+            QMessageBox.critical(self,"Error", "Topic size must be greater than zero")
+            return()
+        else:
+            add_topic(name,category,size)
+            self.clear_new_topic()
+            self.load_topic_list()
+            return()
+
+    def submit_new_category(self):
+        name=self.new_cat_input_1.text()
+        colour=self.new_cat_input_2.text()
+
+        # Error Checking
+        if name == "":
+            QMessageBox.critical(self,"Error", "Category name must not be empty.")
+            return()
+        else:
+            add_category(name,colour)
+            self.clear_new_category()
+            self.load_cat_list()
+            self.load_cat_dropdown_1()
+            self.load_cat_dropdown_2()
+            return()
+    
+    # Load category names into UI list
+    def load_cat_list(self):
+        self.cat_list.clear()
+        for cat in fetch_category():
+            self.cat_list.addItem(cat[1])
+        self.cat_list.sortItems()
+
+    # Load topic names into UI list
+    def load_topic_list(self):
+        self.topic_list.clear()
+        for top in fetch_topic():
+            self.topic_list.addItem(top[1])
+        self.topic_list.sortItems()
+
+    def load_cat_dropdown_1(self):
+        self.new_topic_input_2.clear()
+        for cat in fetch_category():
+            self.new_topic_input_2.addItem(cat[1])
+
+    def load_cat_dropdown_2(self):
+        self.edit_topic_input_2.clear()
+        for cat in fetch_category():
+            self.edit_topic_input_2.addItem(cat[1])
+
+# Main Function
+def main():
+    global app 
+    app = QApplication(sys.argv)
+
+    global window
+    window = MainWindow()
+
+    # Display window
+    window.show()
+    # Call plot function
+    #window.plot()
+    # GUI loop
+    app.exec()
 
 
-app = QApplication(sys.argv)
-
-window = MainWindow()
-# Display window
-window.show()
-# Call plot function
-window.plot()
-
-# GUI loop
-app.exec()
 
 
 
 
-
+if __name__ == '__main__':
+   main()
