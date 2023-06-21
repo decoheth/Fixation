@@ -34,10 +34,6 @@ logging.getLogger("circlify").setLevel(logging.ERROR)
 # Function to create new entry to topic table
 def add_topic(name,category,size=1):
 
-
-
-     
-
     query = "INSERT INTO topic (name, category,size) VALUES (%s,%s,%s)"
     values = (name, category, size)
 
@@ -52,6 +48,7 @@ def add_topic(name,category,size=1):
 def add_category(name,colour=""):
 
     # Error Checking
+    # If colour is null, assign random colour
     if colour=="":
         colour = rand_colour()
 
@@ -146,8 +143,6 @@ def rand_colour():
     
 # Compiles topic table to be plotted
 def topic_data():
-
-
 
     # Get max category_id
     catid_max = 1
@@ -382,7 +377,10 @@ class MainWindow(QMainWindow):
         layout2_1_left.addWidget(cat_list_label)
         # Category list
         self.cat_list = QListWidget()
+
         self.load_cat_list()
+        self.cat_list.itemClicked.connect(self.set_selected_cat)
+
         layout2_1_left.addWidget(self.cat_list)
 
         # Add left side to Row 1 layout
@@ -445,6 +443,8 @@ class MainWindow(QMainWindow):
         self.edit_cat_input_1 = QLineEdit()
         self.edit_cat_input_2 = QLineEdit()
         self.edit_cat_submit = QPushButton("Submit")
+
+        self.edit_cat_submit.clicked.connect(self.change_selected_cat)
 
         layout2_1_right_2_right.addWidget(self.edit_cat_input_1)
         layout2_1_right_2_right.addWidget(self.edit_cat_input_2)
@@ -522,9 +522,12 @@ class MainWindow(QMainWindow):
         layout2_3_left.addWidget(topic_list_label)
         # Topic list
         self.topic_list = QListWidget()
+        
         self.load_topic_list()
-        layout2_3_left.addWidget(self.topic_list)
 
+        self.topic_list.itemClicked.connect(self.set_selected_topic)
+    
+        layout2_3_left.addWidget(self.topic_list)
         # Add left side to Row 3 layout
         layout2_3.addLayout(layout2_3_left)
 
@@ -539,10 +542,10 @@ class MainWindow(QMainWindow):
         # Row 3 - Right - 1
         layout2_3_right_1 = QHBoxLayout()
         edit_topic_label_1 = QLabel("Name:")
-        edit_topic_input_1 = QLineEdit()
+        self.edit_topic_input_1 = QLineEdit()
         
         layout2_3_right_1.addWidget(edit_topic_label_1)
-        layout2_3_right_1.addWidget(edit_topic_input_1)
+        layout2_3_right_1.addWidget(self.edit_topic_input_1)
         # Row 3 - Right - 2
         layout2_3_right_2 = QHBoxLayout()
         edit_topic_label_2 = QLabel("Category:")
@@ -556,17 +559,19 @@ class MainWindow(QMainWindow):
         # Row 3 - Right - 3
         layout2_3_right_3 = QHBoxLayout()
         edit_topic_label_3 = QLabel("Size:")
-        edit_topic_input_3= QSpinBox()
+        self.edit_topic_input_3= QSpinBox()
 
         layout2_3_right_3.addWidget(edit_topic_label_3)
-        layout2_3_right_3.addWidget(edit_topic_input_3)
+        layout2_3_right_3.addWidget(self.edit_topic_input_3)
         # Row 3 - Right - 4
         layout2_3_right_4 = QHBoxLayout()
-        edit_topic_delete = QPushButton("Delete")
-        edit_topic_submit = QPushButton("Submit")
+        self.edit_topic_delete = QPushButton("Delete")
+        self.edit_topic_submit = QPushButton("Submit")
 
-        layout2_3_right_4.addWidget(edit_topic_delete)
-        layout2_3_right_4.addWidget(edit_topic_submit)
+        self.edit_topic_submit.clicked.connect(self.change_selected_topic)
+
+        layout2_3_right_4.addWidget(self.edit_topic_delete)
+        layout2_3_right_4.addWidget(self.edit_topic_submit)
 
         # Add rows to Row 3 right
         layout2_3_right.addLayout(layout2_3_right_1)
@@ -692,6 +697,8 @@ class MainWindow(QMainWindow):
         # Refresh canvas
         self.canvas.draw()
 
+    # Window Functions
+
     def clear_new_topic(self):
         self.new_topic_input_1.setText("")
         self.new_topic_input_3.setValue(1)
@@ -738,14 +745,14 @@ class MainWindow(QMainWindow):
         self.cat_list.clear()
         for cat in fetch_category():
             self.cat_list.addItem(cat[1])
-        self.cat_list.sortItems()
+        #self.cat_list.sortItems()
 
     # Load topic names into UI list
     def load_topic_list(self):
         self.topic_list.clear()
         for top in fetch_topic():
             self.topic_list.addItem(top[1])
-        self.topic_list.sortItems()
+        #self.topic_list.sortItems()
 
     def load_cat_dropdown_1(self):
         self.new_topic_input_2.clear()
@@ -756,6 +763,70 @@ class MainWindow(QMainWindow):
         self.edit_topic_input_2.clear()
         for cat in fetch_category():
             self.edit_topic_input_2.addItem(cat[1])
+
+    def set_selected_topic(self):
+        txt = self.topic_list.currentItem().text()
+        
+        index = self.topic_list.currentRow()
+        top = fetch_topic()
+        cat_name = top[index][2]
+
+        size = top[index][5]
+
+        self.edit_topic_input_1.setText(txt)
+        self.edit_topic_input_2.setCurrentText(cat_name)
+        self.edit_topic_input_3.setValue(size)
+
+
+    def set_selected_cat(self):
+        txt = self.cat_list.currentItem().text()
+
+        index = self.cat_list.currentRow()
+        cat = fetch_category()
+        clr = cat[index][2]
+
+        self.edit_cat_input_1.setText(txt)
+        self.edit_cat_input_2.setText(clr)
+
+    def change_selected_topic(self):
+        id = self.topic_list.currentRow() + 1
+        new_name = self.edit_topic_input_1.text()
+        new_cat = self.edit_topic_input_2.currentText()
+        new_size = self.edit_topic_input_3.value()
+
+        if id == 0:
+            QMessageBox.critical(self,"Error", "Topic must be selected to submit changes.")
+            return()
+
+        mysql_connect("UPDATE topic SET name='{a}', category='{b}', size={c} WHERE id={d};".format(a=new_name, b=new_cat, c=new_size, d=id))
+
+        QMessageBox.information(self,"Topic Edited", "The following new topic has been successfully edited: {}".format(new_name))
+        self.load_topic_list()
+        sync_tables()
+
+    def change_selected_cat(self):
+        id = self.cat_list.currentRow() + 1
+        new_name = self.edit_cat_input_1.text()
+        new_colour = self.edit_cat_input_2.text()
+
+        z = fetch_category()
+        old_name = z[id-1][1]
+
+        if id == 0:
+            QMessageBox.critical(self,"Error", "Category must be selected to submit changes.")
+            return()
+
+        # Update Category
+        mysql_connect("UPDATE category SET name='{a}', colour='{b}' WHERE id={c};".format(a=new_name, b=new_colour, c=id))
+        # Update all existing Topics
+        mysql_connect("UPDATE topic SET category = REPLACE(category, '{a}', '{b}')".format(a=old_name, b=new_name))
+
+
+        QMessageBox.information(self,"Category Edited", "The following new category has been successfully edited: {}".format(new_name))
+        self.load_cat_list() 
+        self.load_cat_dropdown_1()
+        self.load_cat_dropdown_2()
+        sync_tables()
 
 # Main Function
 def main():

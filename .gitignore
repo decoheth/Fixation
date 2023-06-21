@@ -3,9 +3,8 @@ __pycache__
 
 # Development
 dev/
-cell.txt
 
-# Executable Build
+# PyInstaller Build
 build/
 dist/
-.spec
+fixation.spec

@@ -20,6 +20,14 @@ Download/clone repository and launch fixation.exe application.
 
 Install MySQL client on local machine to handle server connections.
 
+To display the plot, click on the 'Refresh Plot' button, indicated in the figure below by the red box.
+
+![](https://github.com/decoheth/Fixation/blob/master/static/Figure_2.png)
+
+To edit and add new data, go to the 'Manage' tab. Here the UI shows a number of different elements to create and alter data.
+
+![](https://github.com/decoheth/Fixation/blob/master/static/Figure_3.png)
+
 
 ## Usage - Dev
 
